@@ -1,0 +1,39 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "https://staging.saucedemo.internal/api/v1/orders",
+    "timestamp": "2026-10-12T09:14:33.012Z",
+    "headers": {
+      "content-type": "application/json",
+      "authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoic3RhbmRhcmRfdXNlciJ9.abc123",
+      "x-session-id": "sess_8f3a2c1d4e9b"
+    },
+    "body": {
+      "userId": "standard_user",
+      "items": [
+        { "productId": "sauce-labs-backpack", "quantity": 1, "price": 29.99 },
+        { "productId": "sauce-labs-bike-light", "quantity": 1, "price": 9.99 }
+      ],
+      "shippingInfo": {
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "postalCode": "10001"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "timestamp": "2026-10-12T09:14:33.198Z",
+    "latency_ms": 186,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7d4e1a9f2c3b"
+    },
+    "body": {
+      "orderId": "ORD-2026-9981",
+      "status": "queued",
+      "message": "Order received and queued for processing",
+      "estimatedProcessingSeconds": 5
+    }
+  }
+}

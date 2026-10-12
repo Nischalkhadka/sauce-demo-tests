@@ -1,0 +1,58 @@
+{
+  "query": {
+    "sql": "SELECT * FROM orders WHERE order_id = 'ORD-2026-9981'",
+    "database": "staging_orders_db",
+    "host": "db-staging-01.internal",
+    "executed_at": "2026-10-12T09:16:10.441Z"
+  },
+  "result": {
+    "rows": [],
+    "row_count": 0,
+    "execution_time_ms": 12
+  },
+  "follow_up_query": {
+    "sql": "SELECT * FROM orders ORDER BY created_at DESC LIMIT 5",
+    "executed_at": "2026-10-12T09:16:14.021Z",
+    "result": {
+      "rows": [
+        {
+          "order_id": "ORD-2026-9975",
+          "user_id": "standard_user",
+          "status": "confirmed",
+          "created_at": "2026-10-12T08:52:11.000Z",
+          "total": 29.99
+        },
+        {
+          "order_id": "ORD-2026-9970",
+          "user_id": "standard_user",
+          "status": "confirmed",
+          "created_at": "2026-10-12T08:41:03.000Z",
+          "total": 9.99
+        },
+        {
+          "order_id": "ORD-2026-9964",
+          "user_id": "standard_user",
+          "status": "confirmed",
+          "created_at": "2026-10-12T08:29:47.000Z",
+          "total": 39.98
+        },
+        {
+          "order_id": "ORD-2026-9958",
+          "user_id": "standard_user",
+          "status": "confirmed",
+          "created_at": "2026-10-12T08:17:22.000Z",
+          "total": 19.99
+        },
+        {
+          "order_id": "ORD-2026-9952",
+          "user_id": "standard_user",
+          "status": "confirmed",
+          "created_at": "2026-10-12T08:04:55.000Z",
+          "total": 49.97
+        }
+      ],
+      "row_count": 5
+    }
+  },
+  "notes": "ORD-2026-9981 does not appear in the orders table. The five most recent orders before the expected order time all have status='confirmed'. No order with a 'queued' status appears in the table at all — the 'status' column only ever contains 'confirmed' or 'cancelled' in existing rows."
+}

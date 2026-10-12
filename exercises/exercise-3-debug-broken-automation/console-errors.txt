@@ -1,0 +1,26 @@
+Browser console output captured during CI run
+Test: "standard_user inventory page matches baseline"
+Runner: GitHub Actions (ubuntu-22.04) — Chromium 131.0.6778.85
+Captured: 2026-10-12T09:31:14Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[09:31:12.441] [INFO]    Page navigated to https://www.saucedemo.com/
+[09:31:12.553] [INFO]    Loaded stored credentials from playwright/.auth/standard_user.json
+[09:31:12.614] [INFO]    Attempting to restore session from stored state
+[09:31:13.102] [NETWORK] GET https://www.saucedemo.com/api/v1/session → ERR_NETWORK_CHANGED
+[09:31:13.105] [NETWORK] Retrying GET https://www.saucedemo.com/api/v1/session
+[09:31:13.882] [NETWORK] GET https://www.saucedemo.com/api/v1/session → 401 Unauthorized
+[09:31:13.884] [ERROR]   Failed to restore session: token_expired
+[09:31:13.890] [WARN]    Session validation failed — redirecting to login page
+[09:31:14.012] [INFO]    Page navigated to https://www.saucedemo.com/ (login page)
+[09:31:14.023] [ERROR]   TypeError: Cannot read properties of undefined (reading 'innerHTML')
+                              at Object.renderPage (https://www.saucedemo.com/static/js/main.chunk.js:1:14822)
+                              at https://www.saucedemo.com/static/js/main.chunk.js:1:8201
+[09:31:14.031] [WARN]    React render: component tree unmounted unexpectedly
+[09:31:14.044] [INFO]    Login page rendered successfully
+[09:31:14.220] [ERROR]   Playwright assertion failed:
+                              expect(page).toHaveURL('/inventory.html')
+                              Expected: "/inventory.html"
+                              Received: "https://www.saucedemo.com/"
+[09:31:14.225] [INFO]    Screenshot captured at: test-results/visual-regression-standard-user/screenshot.png
+[09:31:14.230] [ERROR]   Test FAILED: "standard_user inventory page matches baseline"

@@ -1,16 +1,29 @@
 # sauce-demo-tests
 
-Automated end-to-end tests for the [SauceDemo](https://www.saucedemo.com/) app, built with [`@playwright/test`](https://playwright.dev/) and authored interactively via the Playwright MCP server in Claude Code.
+A Playwright end-to-end test suite for [SauceDemo](https://www.saucedemo.com/), built with [`@playwright/test`](https://playwright.dev/) and extended with a hands-on AI training program. The test suite provides the real codebase that powers six QA exercises, each of which teaches a different AI-assisted QA skill — generating tests, reviewing code, debugging failures, analysing CI logs, performing root cause analysis, and putting all five together in a capstone scenario.
 
-## Repo architecture
+---
+
+> **QA engineers running the tests** — jump to [Setup](#setup) and [Running the tests](#running-the-tests).
+>
+> **Training participants** — start at [exercises/README.md](exercises/README.md). Read the [pre-read](exercises/pre-read/exercise.md) before anything else. Total time commitment: **6–8 hours** across all six exercises (or 3 hours for the first three). A free-tier AI assistant (Claude.ai or ChatGPT) is sufficient — no API key or paid account required.
+
+---
+
+---
+
+## Project Architecture
 
 ```
 .
-├── playwright.config.js   # Test runner config: baseURL, reporter, setup project, storageState reuse
-├── package.json           # Project manifest + npm scripts
+├── README.md                              ← this file
+├── playwright.config.js                   ← baseURL, reporter, setup project, storageState reuse
+├── package.json
+│
 ├── fixtures/
-│   └── index.js           # Custom test/expect — injects page objects as fixtures
-├── pages/                 # Page Object Model — one class per page/component
+│   └── index.js                           ← custom test/expect — injects page objects as fixtures
+│
+├── pages/                                 ← Page Object Model — one class per page/component
 │   ├── LoginPage.js
 │   ├── InventoryPage.js
 │   ├── ProductDetailPage.js
@@ -18,225 +31,157 @@ Automated end-to-end tests for the [SauceDemo](https://www.saucedemo.com/) app, 
 │   ├── CheckoutStepOnePage.js
 │   ├── CheckoutStepTwoPage.js
 │   ├── CheckoutCompletePage.js
-│   ├── SideMenu.js        # Burger-menu component, composed into InventoryPage
-│   └── index.js           # Re-exports all page objects for a single import site
+│   ├── SideMenu.js                        ← burger-menu component, composed into InventoryPage
+│   └── index.js                           ← re-exports all page objects
+│
 ├── tests/
-│   ├── auth.setup.js      # Logs in once as standard_user, saves storageState for reuse
-│   ├── login.spec.js      # Login test suite (valid, invalid, and edge-case scenarios)
-│   ├── inventory.spec.js  # Inventory/sorting and product detail navigation tests
-│   ├── cart.spec.js       # Add-to-cart and cart page tests
-│   ├── checkout.spec.js   # Checkout flow: info form, overview, and order completion
-│   ├── logout.spec.js     # Logout and session/cart persistence tests
-│   ├── visual.spec.js     # Visual regression (screenshot) tests
-│   └── visual.spec.js-snapshots/  # Baseline screenshots compared on each run
-├── playwright/.auth/      # Saved login session for storageState reuse (generated, gitignored)
-├── playwright-report/     # HTML report output (generated, gitignored)
-├── test-results/          # Raw test artifacts: traces, screenshots on failure (generated, gitignored)
-└── .gitignore
+│   ├── auth.setup.js                      ← logs in once, saves storageState for reuse
+│   ├── login.spec.js
+│   ├── inventory.spec.js
+│   ├── cart.spec.js
+│   ├── checkout.spec.js
+│   ├── logout.spec.js
+│   ├── visual.spec.js
+│   └── visual.spec.js-snapshots/          ← committed baseline screenshots
+│
+├── playwright/.auth/                      ← saved login session (generated, gitignored)
+├── playwright-report/                     ← HTML report output (generated, gitignored)
+├── test-results/                          ← traces and failure screenshots (generated, gitignored)
+│
+└── exercises/                             ← AI training program
+    ├── README.md                          ← exercises overview and file index
+    ├── pre-read/
+    ├── exercise-1-generate-automation/
+    ├── exercise-2-code-review/
+    ├── exercise-3-debug-broken-automation/
+    ├── exercise-4-log-analysis/
+    ├── exercise-5-root-cause-analysis/
+    └── exercise-6-capstone/
 ```
 
-- **`playwright.config.js`** sets `baseURL: 'https://www.saucedemo.com'`, configures the `html` reporter, and defines two projects: a `setup` project that runs any `*.setup.js` file first, and the `chromium` project (which `dependencies: ['setup']` on it) that reuses the saved session via `storageState: 'playwright/.auth/standard_user.json'`.
-- **`tests/auth.setup.js`** is that setup project's test: it logs in as `standard_user` once per run and writes the authenticated `storageState` to disk. Every other test then starts already logged in, without re-submitting the login form.
-- **`fixtures/index.js`** extends Playwright's base `test` with one fixture per page object (`loginPage`, `inventoryPage`, `cartPage`, etc.), each auto-instantiated with the test's `page`. Specs destructure what they need — `async ({ inventoryPage, cartPage }) => { ... }` — instead of writing `new InventoryPage(page)` in every test.
-- **`pages/`** holds the Page Object Model. Each class wraps a page's locators as properties and its actions as methods (e.g. `InventoryPage.addToCart('sauce-labs-backpack')`), so selectors live in one place instead of being repeated across spec files. `SideMenu` is a small component (burger menu / logout) composed into `InventoryPage` via `inventoryPage.menu`.
-- **`tests/login.spec.js`** and **`tests/visual.spec.js`** each override the project's default storageState with `test.use({ storageState: { cookies: [], origins: [] } })` since they need a clean, unauthenticated context (they test the login form itself, or log in as different users like `problem_user`/`visual_user`).
-- **`tests/inventory.spec.js`**, **`tests/cart.spec.js`**, **`tests/checkout.spec.js`**, and **`tests/logout.spec.js`** rely on the project's default authenticated storageState — their `beforeEach` just navigates to `/inventory.html` rather than logging in from scratch.
-- Generated folders (`node_modules/`, `test-results/`, `playwright-report/`, `.playwright-mcp/`, `playwright/.auth/`) are excluded from git via `.gitignore`. Baseline screenshots in `tests/visual.spec.js-snapshots/` are *not* excluded — they're meant to be committed and compared against in future runs.
+Key design decisions:
+- `playwright.config.js` defines two projects: a `setup` project that runs `auth.setup.js` first, and `chromium` which `depends: ['setup']` and reuses the saved session via `storageState`.
+- `fixtures/index.js` extends Playwright's base `test` with one fixture per page object, so specs destructure `{ inventoryPage, cartPage }` instead of calling `new InventoryPage(page)` in every test.
+- `login.spec.js` and `visual.spec.js` override the project `storageState` with `test.use({ storageState: { cookies: [], origins: [] } })` because they need an unauthenticated context.
+- Visual baselines in `tests/visual.spec.js-snapshots/` are committed and OS/browser-specific (`-chromium-darwin.png`); first run on a different platform needs `--update-snapshots`.
 
-## What the tests cover
+---
 
-All tests live in `tests/login.spec.js` and target SauceDemo's built-in demo accounts (all use password `secret_sauce`).
+## Goals
 
-### Valid credentials
-| Test | Verifies |
-|---|---|
-| `standard_user` login | Redirects to `/inventory.html`, "Products" header and product list render |
-| `problem_user` login | Logs in successfully despite this account's known UI bugs |
-| `performance_glitch_user` login | Logs in successfully despite an artificial delay (extended timeout) |
-| `visual_user` login | Logs in successfully for visual-regression scenarios |
+The exercises program trains QA engineers to use AI effectively across five distinct roles. By the end, participants can:
 
-### Invalid credentials
-| Test | Verifies |
-|---|---|
-| `locked_out_user` | Shows "Sorry, this user has been locked out." and stays on the login page |
-| Valid user + wrong password | Shows generic username/password mismatch error |
-| Nonexistent username | Shows generic username/password mismatch error |
-| Empty username | Shows "Username is required" |
-| Empty password | Shows "Password is required" |
-| Both empty | Shows "Username is required" (username is validated first) |
-| Error banner dismiss | Clicking the "×" button hides the error message |
+- Write AI prompts that produce project-specific output rather than generic boilerplate
+- Evaluate AI-generated test code against real coding standards and reject or correct it where needed
+- Feed structured, multi-source evidence to AI for debugging and root cause analysis
+- Validate AI outputs — timelines, hypothesis rankings, causal chains — rather than accepting them at face value
+- Distinguish what AI can determine from the evidence given versus what requires further investigation
+- Produce a professional bug report that a developer can act on without follow-up questions
 
-### Edge cases
-| Test | Verifies |
-|---|---|
-| Direct navigation to `/inventory.html` while unauthenticated | Redirects back to `/` with an auth-required error (no auth bypass) |
-| Case-sensitive username (`Standard_User`) | Rejected — usernames are case-sensitive |
-| Leading/trailing whitespace in username | Rejected — input isn't trimmed server-side |
-| SQL-injection-style input (`' OR 1=1--`) | Rejected gracefully, no crash |
+---
 
-### Inventory / sorting
+## What Participants Produce
 
-All tests live in `tests/inventory.spec.js`. They reuse the project's authenticated `standard_user` storageState — `beforeEach` just navigates to `/inventory.html`.
+Each exercise has a concrete output that can be used as a discussion artefact or submitted for review.
 
-| Test | Verifies |
-|---|---|
-| Default product listing | All 6 products render in A-Z order by default |
-| Sort dropdown options | Dropdown offers exactly the 4 expected options (Name A-Z/Z-A, Price low-high/high-low) |
-| Sort Z to A | Product name order reverses |
-| Sort price low to high | Prices are ascending (checked numerically, not hardcoded) |
-| Sort price high to low | Prices are descending (checked numerically, not hardcoded) |
-| Click product name | Navigates to that product's detail page (`/inventory-item.html?id=N`) with correct name and a visible back button |
-| Back button on detail page | Returns to the product list with all 6 items visible |
+| Exercise | Output |
+|----------|--------|
+| Pre-read | Completed readiness checklist (4 items) |
+| 1 — Generate Automation | AI-generated test file evaluated against the coding-standards checklist; list of any gaps AI missed |
+| 2 — Code Review | Ranked list of AI findings (must-fix / should-fix / nice-to-have); note of any issue AI missed from the 10 seeded ones |
+| 3 — Debug Broken Automation | Hypothesis table (hypothesis → evidence → verdict); root cause chain statement; proposed fix for each bug |
+| 4 — Log Analysis | Validated event timeline; corrected failure groupings; one concrete next investigation step |
+| 5 — Root Cause Analysis | Ranked hypothesis list with evidence mapping; pivotal clue identification; targeted next step |
+| Capstone | Written one-page bug report suitable to send to the development team |
 
-### Add to cart / cart page
+No local Node.js setup is required to complete any exercise. An AI assistant (Claude, ChatGPT, or similar) is the only tool participants need. Setup is only required to actually run the generated or fixed tests.
 
-All tests live in `tests/cart.spec.js`. They reuse the project's authenticated `standard_user` storageState — `beforeEach` just navigates to `/inventory.html`.
+---
 
-| Test | Verifies |
-|---|---|
-| Empty cart | Cart badge is hidden when no items have been added |
-| Add single product | Badge shows count "1" and the button toggles from "Add to cart" to "Remove" |
-| Add multiple products | Badge count increments correctly (e.g. "3" after adding 3 items) |
-| Remove from inventory page | Button reverts to "Add to cart" and the badge clears |
-| Cart page contents | Shows correct product name, price, and quantity for an added item |
-| Cart page — multiple items | Lists every product added, in the order added |
-| Remove from cart page | Removing one item updates the list and badge count |
-| Remove all items | Cart list empties and badge disappears |
-| Continue Shopping | Returns to the inventory page from the cart |
-| Checkout button | Visible and enabled on the cart page |
+## File Index
 
-### Checkout flow
+### Test suite
 
-All tests live in `tests/checkout.spec.js`. The top-level `beforeEach` reuses the authenticated `standard_user` storageState, adds two products, and clicks through to the checkout info step, so each test starts already on `checkout-step-one.html`.
+| File | Description |
+|------|-------------|
+| [playwright.config.js](playwright.config.js) | Runner config: baseURL, reporter, setup project, storageState |
+| [fixtures/index.js](fixtures/index.js) | Custom fixtures — page objects injected as test arguments |
+| [pages/InventoryPage.js](pages/InventoryPage.js) | Inventory page object including `SideMenu` composition |
+| [pages/SideMenu.js](pages/SideMenu.js) | Burger menu component with `logout()` method |
+| [tests/auth.setup.js](tests/auth.setup.js) | One-time login that saves `standard_user` session to disk |
+| [tests/checkout.spec.js](tests/checkout.spec.js) | Full checkout flow — reference for Exercise 2 code review |
+| [tests/visual.spec.js](tests/visual.spec.js) | Visual regression tests — reference for Exercise 3 debugging |
+| [tests/logout.spec.js](tests/logout.spec.js) | Logout and session tests — reference for Exercise 1 generation |
 
-**Step one (your information)**
-| Test | Verifies |
-|---|---|
-| Missing first name | Shows "Error: First Name is required" |
-| Missing last name | Shows "Error: Last Name is required" |
-| Missing postal code | Shows "Error: Postal Code is required" |
-| Valid info | Advances to `checkout-step-two.html` |
-| Cancel | Returns to the cart page |
+### Exercises
 
-**Step two (overview)** — nested `beforeEach` fills valid info and continues to this step first
-| Test | Verifies |
-|---|---|
-| Item list | Correct product names and prices carried over from the cart |
-| Totals | Item total matches expected value ($39.98 for the two seeded products) and `total = item total + tax` (computed, not hardcoded) |
-| Cancel | Returns to the inventory page |
-| Finish | Completes the order and navigates to `checkout-complete.html` with the correct thank-you message |
+| File | Description |
+|------|-------------|
+| [exercises/README.md](exercises/README.md) | Full exercises overview, learning path, and file index |
+| [exercises/pre-read/exercise.md](exercises/pre-read/exercise.md) | Worked example — one complete AI interaction from prompt to evaluation. Read first. |
+| [exercises/exercise-1-generate-automation/exercise.md](exercises/exercise-1-generate-automation/exercise.md) | Generate tests for the Reset App State feature |
+| [exercises/exercise-2-code-review/exercise.md](exercises/exercise-2-code-review/exercise.md) | Review a deliberately flawed checkout test (10 seeded issues) |
+| [exercises/exercise-3-debug-broken-automation/exercise.md](exercises/exercise-3-debug-broken-automation/exercise.md) | Debug a failing visual regression test using four evidence files |
+| [exercises/exercise-4-log-analysis/exercise.md](exercises/exercise-4-log-analysis/exercise.md) | Analyse a 150-line CI log with five failures |
+| [exercises/exercise-5-root-cause-analysis/exercise.md](exercises/exercise-5-root-cause-analysis/exercise.md) | Investigate a missing order using API, DB, and timeline evidence |
+| [exercises/exercise-6-capstone/exercise.md](exercises/exercise-6-capstone/exercise.md) | All five AI roles in one scenario, ending in a written bug report |
 
-**Checkout complete**
-| Test | Verifies |
-|---|---|
-| Back home | Returns to the inventory page and the cart badge is cleared (order is finalized) |
-
-### Logout
-
-All tests live in `tests/logout.spec.js`. They reuse the project's authenticated `standard_user` storageState — `beforeEach` just navigates to `/inventory.html` (already logged in, which is the point: logout has something to log *out* of).
-
-| Test | Verifies |
-|---|---|
-| Side menu links | Opening the menu shows All Items, About, Logout, and Reset App State |
-| Logout action | Redirects to the login page with empty username/password fields |
-| Session invalidation | After logout, direct navigation to `/inventory.html` redirects to login with an auth-required error (session is actually cleared server-side, not just hidden client-side) |
-| Re-login after logout | Logging back in with the same credentials succeeds and returns to the inventory page |
-| Cart persistence | Cart contents survive a logout/login cycle for the same user (cart is stored independently of the session) |
-
-### Visual regression
-
-All tests live in `tests/visual.spec.js` and use `test.use({ storageState: { cookies: [], origins: [] } })` to start from a clean, unauthenticated context (each test logs in as whichever user it needs). Screenshots are compared against baselines committed in `tests/visual.spec.js-snapshots/`.
-
-| Test | Verifies |
-|---|---|
-| Login page | Full-page screenshot matches baseline |
-| `standard_user` inventory page | Full-page screenshot matches baseline |
-| `problem_user` inventory page | Full-page screenshot matches baseline — this account has known UI bugs (e.g. broken images), so its baseline documents that known-buggy state; the test catches *further* unintended changes |
-| Cart badge | Element-level screenshot of `.shopping_cart_badge` after adding one item |
-| Checkout complete page | Full-page screenshot after completing an order matches baseline |
-
-Screenshot baselines are OS/browser-specific (filenames are suffixed e.g. `-chromium-darwin.png`) and were generated on macOS/Chromium — expect the first run on a different OS (e.g. Linux CI) to need its own baseline.
-
-Run `npx playwright show-report` after a test run to see a full HTML report with pass/fail status, timings, and traces per test.
-
-## About Playwright MCP
-
-[Playwright MCP](https://github.com/microsoft/playwright-mcp) is a Model Context Protocol server that exposes a real, controllable browser to an LLM agent (Claude Code, in this repo) as a set of tools — navigate, click, type, snapshot, screenshot, etc. It's what let this test suite be built interactively:
-
-1. The agent drove a live browser via MCP tools (`browser_navigate`, `browser_snapshot`, `browser_type`, `browser_click`) to manually walk through the login flow first.
-2. `browser_snapshot` returns an accessibility-tree view of the page with stable element references, which is how form fields and buttons were located without guessing at selectors.
-3. Once the manual flow was verified end-to-end, the equivalent steps were codified into a permanent, repeatable `@playwright/test` spec (`tests/login.spec.js`) — the MCP session itself is exploratory/interactive and isn't part of the automated test run.
-4. MCP was also used to probe exact error message text and edge-case behavior (e.g., what happens navigating directly to an authenticated page) before writing assertions, so the test expectations reflect real observed app behavior rather than assumptions.
-
-In short: Playwright MCP was the tool used *to build and validate* the tests; `@playwright/test` (via `npx playwright test`) is what actually *runs* them, including in CI.
+---
 
 ## Setup
 
 ### Prerequisites
+
 - Node.js 16 or later
 - npm
 
 ### Steps
 
-1. Clone or navigate into the repo:
-   ```bash
-   cd sauce-demo-tests
-   ```
+```bash
+npm install
+npx playwright install chromium
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Install the Chromium browser binary used by the tests:
-   ```bash
-   npx playwright install chromium
-   ```
+---
 
 ## Running the tests
 
-Run the full suite headlessly:
 ```bash
-npm test
+npm test                                                        # full suite headlessly
+npx playwright test tests/login.spec.js                        # single file
+npx playwright test -g "locked_out_user"                       # filter by name
+npx playwright test --headed                                    # visible browser
+npx playwright test --ui                                        # interactive UI mode
+npx playwright test --debug                                     # Playwright Inspector
+npx playwright test tests/visual.spec.js --update-snapshots    # regenerate baselines
+npx playwright show-report                                      # open HTML report
 ```
-(equivalent to `npx playwright test`)
 
-This automatically runs the `setup` project first (logging in once and saving `playwright/.auth/standard_user.json`), then runs all spec files against it.
+The `setup` project (`auth.setup.js`) runs automatically before any spec file, logs in once as `standard_user`, and saves the session to `playwright/.auth/standard_user.json`. Every other spec reuses that session via `storageState` — no repeated login.
 
-### Quick reference
+---
 
-| Command | What it does |
-|---|---|
-| `npm test` | Run the full suite headlessly (setup + all spec files) |
-| `npx playwright test tests/login.spec.js` | Run a single test file |
-| `npx playwright test -g "locked_out_user"` | Run only tests matching a name pattern |
-| `npx playwright test --headed` | Run with a visible browser window |
-| `npx playwright test --ui` | Interactive UI mode — step through tests, inspect each action |
-| `npx playwright test --debug` | Open the Playwright Inspector and pause on the first action |
-| `npx playwright test tests/visual.spec.js --update-snapshots` | Regenerate visual regression baselines |
-| `npx playwright show-report` | Open the HTML report from the last run |
+## What the tests cover
 
-### Updating visual regression baselines
+<details>
+<summary>Expand for full test coverage summary</summary>
 
-If a UI change intentionally alters a screenshot, regenerate the baselines:
-```bash
-npx playwright test tests/visual.spec.js --update-snapshots
-```
-Review the diffs in `tests/visual.spec.js-snapshots/` before committing them.
+| Suite | Tests |
+|-------|-------|
+| `login.spec.js` | Valid logins (4 user types), invalid credentials (7 cases), edge cases (SQL injection, case sensitivity, whitespace) |
+| `inventory.spec.js` | Product listing count, sort dropdown options, all 4 sort orders, product detail navigation |
+| `cart.spec.js` | Empty cart, add/remove single and multiple items, cart page contents, Continue Shopping |
+| `checkout.spec.js` | Step 1 validation (3 fields), step 2 totals (item total + computed tax), Finish, Back Home |
+| `logout.spec.js` | Side menu links, logout redirect, session invalidation, re-login, cart persistence |
+| `visual.spec.js` | Login page, inventory page (standard_user + problem_user), cart badge, checkout complete |
 
-### Viewing the HTML report
+</details>
 
-An HTML report is generated automatically after every run (configured in `playwright.config.js`). To open it:
-```bash
-npx playwright show-report
-```
-This starts a local server (default `http://localhost:9223` or the next free port) and opens the report in your browser, showing pass/fail status, durations, and traces for each test.
+---
 
-## Known limitations & caveats
+## Known limitations
 
-- **Live app, no mocking.** These tests hit the real `https://www.saucedemo.com/` over the network — there's no offline or mocked mode. A test failure could mean either a real regression or that the public demo site itself changed/was down.
-- **Visual baselines are OS/browser-specific.** The committed screenshots in `tests/visual.spec.js-snapshots/` were generated on macOS/Chromium (filenames suffixed `-chromium-darwin.png`). Running on a different OS (e.g. Linux CI) will fail on first run until baselines for that platform are generated there — this is expected, not a bug in the suite.
-- **Cart persistence across logout is intentional app behavior, not a bug.** SauceDemo stores cart contents independently of the login session, so `tests/logout.spec.js` asserts that persistence rather than a cart reset. If SauceDemo ever changes this, that test's expectation would need updating along with it.
-- **`storageState` reuse means most suites assume a fresh cart.** The saved session in `playwright/.auth/standard_user.json` is captured once (before anything is added to the cart) in `tests/auth.setup.js`, so `inventory`, `cart`, and `checkout` tests all start from an empty cart. If the setup file ever adds items before saving state, downstream tests' assumptions would break.
-- **`login.spec.js` and `visual.spec.js` opt out of the shared session.** They explicitly reset `storageState` per file since they test different users or the login form itself — if you add a new spec that also needs a different user, remember to do the same rather than relying on the project default.
-- **Single browser project.** Only `chromium` is configured; there's no cross-browser (Firefox/WebKit) or mobile-viewport coverage yet.
+- **Live app, no mocking.** Tests hit the real `https://www.saucedemo.com/` — a failure could be a regression or the demo site changing or being down.
+- **Visual baselines are OS/browser-specific.** Committed baselines are macOS/Chromium. First run on Linux CI needs `--update-snapshots` to generate that platform's baselines.
+- **Single browser project.** Only `chromium` is configured; no Firefox/WebKit or mobile-viewport coverage.
+- **Cart persistence across logout is intentional.** SauceDemo stores cart contents independently of the session — `logout.spec.js` asserts this as expected behaviour.

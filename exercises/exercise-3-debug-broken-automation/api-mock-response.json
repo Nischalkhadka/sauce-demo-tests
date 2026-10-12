@@ -1,0 +1,16 @@
+{
+  "endpoint": "GET /api/v1/session",
+  "timestamp": "2026-10-12T09:31:14.882Z",
+  "status": 401,
+  "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer realm=\"saucedemo\""
+  },
+  "body": {
+    "authenticated": false,
+    "reason": "token_expired",
+    "message": "Session token has expired. Please log in again.",
+    "expired_at": "2026-10-12T09:28:00.000Z",
+    "token_age_seconds": 194
+  }
+}

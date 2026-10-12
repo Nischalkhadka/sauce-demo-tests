@@ -1,0 +1,203 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sauce-demo-tests — Playwright CI Run
+  Branch: feature/update-checkout-flow
+  Commit: a3f91c2
+  Runner: GitHub Actions / ubuntu-22.04
+  Node: 20.18.0  Playwright: 1.62.1  Chromium: 131.0.6778.85
+  Started: 2026-10-12T09:22:58.000Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Running 45 tests using 4 workers
+
+[09:22:58.124Z] [worker:0] Starting project: setup
+[09:22:58.341Z] [worker:0] › tests/auth.setup.js:5:1 › authentication setup
+
+[09:23:00.512Z] [worker:0] Navigated to https://www.saucedemo.com
+[09:23:01.883Z] [worker:0] Filled [data-test="username"] with "standard_user"
+[09:23:02.014Z] [worker:0] Filled [data-test="password"] with "secret_sauce"
+[09:23:02.131Z] [worker:0] Clicked [data-test="login-button"]
+[09:23:03.407Z] [worker:0] URL assertion passed: /inventory.html
+[09:23:03.441Z] [worker:0] Saved storageState → playwright/.auth/standard_user.json
+[09:23:03.501Z] [worker:0]   ✓  [setup] › tests/auth.setup.js:5:1 › authentication setup (5.2s)
+
+[09:23:03.512Z] [worker:0] Starting project: chromium
+[09:23:03.520Z] [worker:1] Starting project: chromium
+[09:23:03.524Z] [worker:2] Starting project: chromium
+[09:23:03.529Z] [worker:3] Starting project: chromium
+
+──────────────────────────────────────────────────────────────
+ login.spec.js  (15 tests)
+──────────────────────────────────────────────────────────────
+[09:23:04.101Z] [worker:0]   ✓  standard_user logs in and lands on /inventory.html (1.3s)
+[09:23:05.422Z] [worker:1]   ✓  locked_out_user sees error message (0.9s)
+[09:23:05.711Z] [worker:0]   ✓  wrong password shows error (0.8s)
+[09:23:06.189Z] [worker:2]   ✓  nonexistent username shows error (0.7s)
+[09:23:06.490Z] [worker:1]   ✓  empty username shows error (0.7s)
+[09:23:06.820Z] [worker:3]   ✓  empty password shows error (0.7s)
+[09:23:07.114Z] [worker:0]   ✓  both fields empty shows error (0.6s)
+[09:23:07.388Z] [worker:2]   ✓  error banner dismissal works (0.8s)
+[09:23:07.701Z] [worker:1]   ✓  direct /inventory.html while logged out redirects (0.9s)
+[09:23:08.002Z] [worker:3]   ✓  case-sensitive username rejected (0.7s)
+[09:23:08.301Z] [worker:0]   ✓  leading whitespace in username rejected (0.8s)
+[09:23:08.600Z] [worker:2]   ✓  SQL-injection-style input rejected (0.9s)
+[09:23:08.890Z] [worker:1]   ✓  visual_user logs in and lands on /inventory.html (1.1s)
+[09:23:09.001Z] [worker:3] › login.spec.js:88:3 › performance_glitch_user logs in within 15 s
+
+[09:23:24.021Z] [worker:3]
+  1) [chromium] › tests/login.spec.js:88:3 › performance_glitch_user logs in within 15 s
+
+    TimeoutError: locator.click: Timeout 15000ms exceeded.
+    Call log:
+      - waiting for [data-test="login-button"]
+
+       88 |   test('performance_glitch_user logs in within 15 s', async ({ page, loginPage }) => {
+       89 |     await loginPage.goto();
+       90 |     await loginPage.login('performance_glitch_user', 'secret_sauce');
+    >  91 |     await expect(page).toHaveURL(/\/inventory\.html/, { timeout: 15000 });
+          |                                                                  ^
+       92 |   });
+
+        at /home/runner/work/sauce-demo-tests/tests/login.spec.js:91:5
+
+[09:23:24.031Z] [worker:0] › login.spec.js:95:3 › problem_user logs in and lands on /inventory.html
+
+[09:23:24.915Z] [worker:3]
+  2) [chromium] › tests/login.spec.js:95:3 › problem_user logs in and lands on /inventory.html
+
+    Error: expect(received).toHaveURL(expected)
+
+    Expected pattern: /\/inventory\.html/
+    Received string:  "https://www.saucedemo.com/"
+
+    Note: problem_user authenticated successfully (HTTP 200) but the app redirected
+    back to the root URL. This appears to be a known upstream issue with the demo app.
+
+       95 |   test('problem_user logs in and lands on /inventory.html', async ({ page, loginPage }) => {
+       96 |     await loginPage.goto();
+       97 |     await loginPage.login('problem_user', 'secret_sauce');
+    >  98 |     await expect(page).toHaveURL(/\/inventory\.html/);
+          |                        ^
+       99 |   });
+
+        at /home/runner/work/sauce-demo-tests/tests/login.spec.js:98:5
+
+[09:23:25.002Z] [worker:0]   ✓  problem_user logs in and lands on /inventory.html (0.9s)
+
+──────────────────────────────────────────────────────────────
+ inventory.spec.js  (7 tests)
+──────────────────────────────────────────────────────────────
+[09:23:25.414Z] [worker:1]   ✓  shows 6 products in A–Z order by default (1.1s)
+[09:23:26.521Z] [worker:2]   ✓  sort dropdown has all 4 options (0.8s)
+[09:23:27.330Z] [worker:1]   ✓  sort Z-to-A works (1.0s)
+[09:23:28.341Z] [worker:3]   ✓  sort price low-to-high works (1.1s)
+[09:23:29.441Z] [worker:2]   ✓  sort price high-to-low works (1.0s)
+[09:23:30.450Z] [worker:1]   ✓  product name click navigates to detail page (1.2s)
+[09:23:31.652Z] [worker:3]   ✓  back button returns to inventory with 6 items (1.0s)
+
+──────────────────────────────────────────────────────────────
+ cart.spec.js  (10 tests)
+──────────────────────────────────────────────────────────────
+[09:23:32.101Z] [worker:0]   ✓  cart badge hidden when cart is empty (0.7s)
+[09:23:32.801Z] [worker:2]   ✓  adding one product shows badge=1 and Remove button (1.1s)
+[09:23:33.912Z] [worker:1]   ✓  adding three products shows badge=3 (1.3s)
+[09:23:35.214Z] [worker:0]   ✓  remove from inventory restores Add-to-cart (1.0s)
+[09:23:36.219Z] [worker:3] › cart.spec.js:58:5 › cart page shows correct item name, price, qty
+
+[09:23:42.109Z] [worker:3]
+  3) [chromium] › tests/cart.spec.js:58:5 › cart page shows correct item name, price, qty
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+      - waiting for locator('.shopping_cart_badge') to be visible
+
+       55 |   test.beforeEach(async ({ page, inventoryPage }) => {
+       56 |     await page.goto('/inventory.html');
+       57 |     await inventoryPage.addToCart('sauce-labs-backpack');
+    >  58 |     await expect(inventoryPage.cartBadge).toBeVisible({ timeout: 30000 });
+          |                                           ^
+       59 |   });
+
+        at /home/runner/work/sauce-demo-tests/tests/cart.spec.js:58:5
+
+[09:23:42.115Z] [worker:0] › cart.spec.js:70:5 › cart page shows multiple items in order
+
+[09:23:48.009Z] [worker:0]
+  4) [chromium] › tests/cart.spec.js:70:5 › cart page shows multiple items in order
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+      - waiting for locator('.shopping_cart_badge') to be visible
+
+       67 |   test.beforeEach(async ({ page, inventoryPage }) => {
+       68 |     await page.goto('/inventory.html');
+       69 |     await inventoryPage.addToCart('sauce-labs-backpack');
+    >  70 |     await expect(inventoryPage.cartBadge).toBeVisible({ timeout: 30000 });
+          |                                           ^
+       71 |     await inventoryPage.addToCart('sauce-labs-bike-light');
+       72 |   });
+
+        at /home/runner/work/sauce-demo-tests/tests/cart.spec.js:70:5
+
+[09:23:48.881Z] [worker:2]   ✓  remove one item from cart leaves remaining item (1.2s)
+[09:23:50.082Z] [worker:1]   ✓  remove all items empties cart (1.0s)
+[09:23:51.091Z] [worker:3]   ✓  Continue Shopping returns to inventory (0.9s)
+[09:23:52.001Z] [worker:0]   ✓  Checkout button is visible and enabled (0.8s)
+
+──────────────────────────────────────────────────────────────
+ checkout.spec.js  (8 tests)
+──────────────────────────────────────────────────────────────
+[09:23:52.801Z] [worker:1]   ✓  missing first name shows required error (0.9s)
+[09:23:53.701Z] [worker:2]   ✓  missing last name shows required error (0.8s)
+[09:23:54.501Z] [worker:3]   ✓  missing postal code shows required error (0.9s)
+[09:23:55.401Z] [worker:0]   ✓  valid info advances to step two (1.0s)
+[09:23:56.401Z] [worker:1]   ✓  cancel button returns to the cart page (0.8s)
+[09:23:57.201Z] [worker:2] › checkout.spec.js:64:3 › item total, tax, and total add up correctly
+
+[09:24:02.309Z] [worker:2]
+  5) [chromium] › tests/checkout.spec.js:64:3 › item total, tax, and total add up correctly
+
+    Error: expect(received).toBeCloseTo(expected)
+
+    Expected: 39.98
+    Received: 0
+
+    Message: Item total shows $0.00. Both cart items appear to have been lost
+    before the checkout overview rendered. Possible cause: parallel test workers
+    sharing app state — a prior cart.spec.js worker may have triggered a reset.
+
+       64 |   test('item total, tax, and total add up correctly', async ({ checkoutStepTwoPage }) => {
+       65 |     const itemTotalText = await checkoutStepTwoPage.subtotalLabel.textContent();
+    >  66 |     const itemTotal = parseFloat(itemTotalText.replace('Item total: $', ''));
+          |                       ^
+       67 |     expect(itemTotal).toBeCloseTo(39.98, 2);
+
+        at /home/runner/work/sauce-demo-tests/tests/checkout.spec.js:66:5
+
+[09:24:02.801Z] [worker:3]   ✓  cancel button returns to the inventory page (0.9s)
+[09:24:03.701Z] [worker:0]   ✓  finish button completes the order (1.1s)
+[09:24:04.801Z] [worker:1]   ✓  back home button returns to inventory and clears cart (1.2s)
+
+──────────────────────────────────────────────────────────────
+ logout.spec.js  (5 tests)
+──────────────────────────────────────────────────────────────
+[09:24:05.402Z] [worker:2]   ✓  side menu exposes all expected links (0.8s)
+[09:24:06.201Z] [worker:3]   ✓  logout redirects to login page with empty fields (1.0s)
+[09:24:07.201Z] [worker:0]   ✓  session invalidated: protected page redirects after logout (1.1s)
+[09:24:08.302Z] [worker:1]   ✓  re-login after logout lands on inventory (0.9s)
+[09:24:09.202Z] [worker:2]   ✓  cart persists across logout and re-login (1.1s)
+
+──────────────────────────────────────────────────────────────
+ Summary
+──────────────────────────────────────────────────────────────
+
+  5 failed
+    1) [chromium] › tests/login.spec.js:88:3 › performance_glitch_user logs in within 15 s
+    2) [chromium] › tests/login.spec.js:95:3 › problem_user logs in and lands on /inventory.html
+    3) [chromium] › tests/cart.spec.js:58:5 › cart page shows correct item name, price, qty
+    4) [chromium] › tests/cart.spec.js:70:5 › cart page shows multiple items in order
+    5) [chromium] › tests/checkout.spec.js:64:3 › item total, tax, and total add up correctly
+
+  40 passed
+  Finished in 46.8 s
+
+  HTML report: npx playwright show-report
